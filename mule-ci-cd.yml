@@ -53,7 +53,7 @@ jobs:
         run: |
           mvn deploy \
             -DmuleDeploy \
-            -Danypoint.username=Narsinga
-            -Danypoint.password=Narsing@006
+            -Danypoint.username= 'Narsinga'
+            -Danypoint.password= 'Narsing@006'
             -DskipTests \
             -Danypoint.environment=dev
