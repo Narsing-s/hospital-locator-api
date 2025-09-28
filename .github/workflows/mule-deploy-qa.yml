@@ -41,7 +41,7 @@ jobs:
         run: |
           mvn mule:deploy \
             -DmuleDeploy \
-            -DconnectedAppClientId=${{ secrets.ANYPOINT_CLIENT_ID_QA }} \
-            -DconnectedAppClientSecret=${{ secrets.ANYPOINT_CLIENT_SECRET_QA }} \
+            -DconnectedAppClientId=${{ secrets.ANYPOINT_CLIENT_ID_DEV }} \
+            -DconnectedAppClientSecret=${{ secrets.ANYPOINT_CLIENT_SECRET_DEV }} \
             -Danypoint.environment=qa \
             -Dapp.name=hospital-locator-api
