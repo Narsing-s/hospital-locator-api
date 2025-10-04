@@ -8,7 +8,7 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
     </http:listener-config>
     <apikit:config name="hospital-locator-api-config" api="hospital-locator-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <snowflake:snowflake-config name="Snowflake_Config" doc:name="Snowflake Config" doc:id="d5fd3b92-dcdf-4bc9-8a05-22c56a83a993" >
-		<snowflake:snowflake-connection accountName="PTWXDSX-CF63578" warehouse="COMPUTE_WH" database="HOSPITALLOCATORDB" schema="PUBLIC" user="SINGSING" password="Narsing@12345678" role="ACCOUNTADMIN" />
+		<snowflake:snowflake-connection accountName="SBMQKDP-TT42813" warehouse="COMPUTE_WH" database="MYDATABASE" schema="PUBLIC" user="SINGSING" password="Singsing@123456789" role="ACCOUNTADMIN" />
 	</snowflake:snowflake-config>
 	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="bd15de64-f814-4168-b001-822618cbcaea" >
 		<email:smtp-connection host="smtp.gmail.com" port="587" user="narsingbeesetti06@gmail.com" password="kejo yanz wjpo vnum" >
@@ -179,19 +179,17 @@ output application/json
 		<logger level="INFO" doc:name="After email sent " doc:id="c499b380-88fd-41b8-ac92-6d3c58691f0c" message="----------------------------email sent successfully-----------------------------------"/>
 	</sub-flow>
 	<flow name="get:\hospitals\(hospital_id)\services:hospital-locator-api-config">
-        <set-variable value="#[attributes.uriParams.hospital_id as Number]" doc:name="inputPayload" doc:id="a6ba33fd-19da-4d99-b85b-2fda55ba71c4" variableName="inputPayload"/>
-		<ee:cache doc:name="Cache" doc:id="4945ab44-be96-434c-b484-eedc823c9a90" >
-			<logger level="INFO" doc:name="Start API" doc:id="09749e8e-6b7f-4e2a-ac76-a9d8d63c99ce" message="------------------------------------------Before DB------------------------------" />
-			<snowflake:select doc:name="DB select to reterive hospitals services by hospital_id" doc:id="64ef2727-8b38-4264-9180-6592c62b566a" config-ref="Snowflake_Config">
+        <set-variable value="#[attributes.uriParams.hospital_id as Number]" doc:name="requestedHospital_id" doc:id="a6ba33fd-19da-4d99-b85b-2fda55ba71c4" variableName="requestedHospital_id"/>
+		<logger level="INFO" doc:name="Start API" doc:id="09749e8e-6b7f-4e2a-ac76-a9d8d63c99ce" message="------------------------------------------Before DB------------------------------" />
+		<snowflake:select doc:name="DB select to reterive hospitals services by hospital_id" doc:id="64ef2727-8b38-4264-9180-6592c62b566a" config-ref="Snowflake_Config">
 			<snowflake:sql><![CDATA[select * from services where hospital_id = :hospital_id]]></snowflake:sql>
 			<snowflake:input-parameters><![CDATA[#[%dw 2.0
 output application/json
 ---
 {
-	"hospital_id": vars.inputPayload
+	"hospital_id": vars.requestedHospital_id
 }]]]></snowflake:input-parameters>
 		</snowflake:select>
-		</ee:cache>
 		<logger level="INFO" doc:name="After DB" doc:id="d7e24d4a-f0b7-4884-94e7-3567652b6260" message="------------------------------------------------After DB--------------------------------------------"/>
 		<ee:transform doc:name="DB Response">
             <ee:variables>
@@ -224,27 +222,26 @@ var hospital_id = (attributes.queryParams.hospital_id default "") as String
 ---
 if (sizeOf(payload) > 0)
 {
-    "status": "success",
-    "hospital_id": vars.hospital_id,
-    "message": "Hospital services details retrieved successfully",
-    "data": payload
+    status: "success",
+    hospital_id: vars.requestedHospital_id,
+    message: "Hospital services details retrieved successfully",
+    data: payload
 }
 else
 {
-    "status": "failure",
-    "message": "No hospital services found for the requested hospital_id",
-    "data": []
+    status: "failure",
+    message: "No hospital services found for the requested hospital_id: " ++ hospital_id,
+    data: []
 }
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="End Flo" doc:id="5aaadca3-8209-4b9d-84d0-9fa4e70bf820" message="#[payload]"/>
+		<logger level="INFO" doc:name="End Flow" doc:id="5aaadca3-8209-4b9d-84d0-9fa4e70bf820" message="#[payload]"/>
     </flow>
     <flow name="get:\pincode:hospital-locator-api-config">
         <set-variable value="#[attributes.queryParams.pincode as Number]" doc:name="requestedPincode" doc:id="11d6a409-4b88-4955-ad7e-278a020bd4fd" variableName="requestedPincode"/>
-		<ee:cache doc:name="Cache" doc:id="0b96e896-87ab-43da-b9b4-eef2ba350fcd" >
-			<logger level="INFO" doc:name="Before DB" doc:id="bcc362ef-4aea-40ef-be44-e2d4c878c520" message="-------------------------------------------Before DB-----------------------------------" />
-			<snowflake:select doc:name="DB select to reterive hospitals detaailes by pincode" doc:id="f9ddac0b-44f3-4a60-94c7-69aa8d3d0d48" config-ref="Snowflake_Config">
+		<logger level="INFO" doc:name="Before DB" doc:id="bcc362ef-4aea-40ef-be44-e2d4c878c520" message="-------------------------------------------Before DB-----------------------------------" />
+		<snowflake:select doc:name="DB select to reterive hospitals detaailes by pincode" doc:id="f9ddac0b-44f3-4a60-94c7-69aa8d3d0d48" config-ref="Snowflake_Config">
 			<snowflake:sql><![CDATA[select * from hospitalsdb where pincode = :pincode]]></snowflake:sql>
 			<snowflake:input-parameters><![CDATA[#[%dw 2.0
 output application/json
@@ -253,7 +250,6 @@ output application/json
 	"pincode": attributes.queryParams.pincode as Number
 }]]]></snowflake:input-parameters>
 		</snowflake:select>
-		</ee:cache>
 		<logger level="INFO" doc:name="After DB " doc:id="2b0e8ea2-b36a-46f8-bc69-f90310eed888" message="---------------------------------------------After DB ------------------------------------------"/>
 		<ee:transform doc:name="dbResponse">
             <ee:message>
@@ -273,8 +269,7 @@ payload map (hospitalsDB) -> {
     hospital_id: hospitalsDB.HOSPITAL_ID,
     name: hospitalsDB.NAME,
     address: hospitalsDB.ADDRESS,
-    contact: hospitalsDB.CONTACT,
-    address: hospitalsDB.ADDRESS
+    contact: hospitalsDB.CONTACT
 }
 ]]></ee:set-payload>
 			</ee:message>
