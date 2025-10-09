@@ -125,7 +125,7 @@ output application/json
 	<sub-flow name="hospital-locator-api-email-flow" doc:id="357d357a-78d4-41b0-845c-8ac8cc33f5af" >
 		<logger level="INFO" doc:name="Before email sent" doc:id="c352e2e1-3fe6-4c0e-9d80-6b013230c102" message="------------------------------Before email sent-------------------------------"/>
 		<set-variable value="#[vars.requestedPayload.firstName as String]" doc:name="firstName" doc:id="8800447d-07a1-4421-ad2e-3491f5c07cd7" variableName="firstName"/>
-		<set-variable value='#[%dw 2.0&#10;output text/plain&#10;---&#10;"Hi " ++ vars.requestedPayload.firstName as String ++" your registration is completed successfully completed and your patient_id is "++ vars.Patient_id]' doc:name="emailBody" doc:id="37e1eba1-85d3-4e24-8482-4d7911b563ae" variableName="emailBody" />
+		<set-variable value='#[%dw 2.0&#10;output text/plain&#10;---&#10;"Hi " ++ vars.requestedPayload.firstName as String ++" your registration is completed successfully and your patient_id is "++ vars.Patient_id]' doc:name="emailBody" doc:id="37e1eba1-85d3-4e24-8482-4d7911b563ae" variableName="emailBody" />
 		<parse-template doc:name="Parse Template" doc:id="09929072-3dbe-4646-a301-692fa4bf07c5" >
 			<content >&lt;html&gt;
 &lt;head&gt;
@@ -167,15 +167,7 @@ output application/json
 	<flow name="get:\hospitals\(hospital_id)\services:hospital-locator-api-config">
         <set-variable value="#[attributes.uriParams.hospital_id as Number]" doc:name="requestedHospital_id" doc:id="a6ba33fd-19da-4d99-b85b-2fda55ba71c4" variableName="requestedHospital_id"/>
 		<logger level="INFO" doc:name="Start API" doc:id="09749e8e-6b7f-4e2a-ac76-a9d8d63c99ce" message="------------------------------------------Before DB------------------------------" />
-		<snowflake:select doc:name="Select" doc:id="15215372-f006-4d48-90bc-5c183b2f248a" config-ref="Snowflake_Config">
-			<snowflake:sql ><![CDATA[select * from services where hospital_id = :hospital_id]]></snowflake:sql>
-			<snowflake:input-parameters ><![CDATA[#[%dw 2.0
-output application/json
----
-{
-	"hospital_id": vars.requestedHospital_id
-}]]]></snowflake:input-parameters>
-		</snowflake:select>
+		<flow-ref doc:name="Flow Reference" doc:id="81682602-856c-4caa-84b2-eb59250237df" name="get-hospitals-servicesSub_Flow"/>
 		<logger level="INFO" doc:name="After DB" doc:id="d7e24d4a-f0b7-4884-94e7-3567652b6260" message="------------------------------------------------After DB--------------------------------------------"/>
 		<ee:transform doc:name="DB Response">
             <ee:variables>
@@ -227,15 +219,7 @@ else
     <flow name="get:\pincode:hospital-locator-api-config">
         <set-variable value="#[attributes.queryParams.pincode as Number]" doc:name="requestedPincode" doc:id="11d6a409-4b88-4955-ad7e-278a020bd4fd" variableName="requestedPincode"/>
 		<logger level="INFO" doc:name="Before DB" doc:id="bcc362ef-4aea-40ef-be44-e2d4c878c520" message="-------------------------------------------Before DB-----------------------------------" />
-		<snowflake:select doc:name="Select" doc:id="0b5ee58f-94fc-4d88-913f-442264848a22" config-ref="Snowflake_Config">
-			<snowflake:sql ><![CDATA[select * from hospitalsdb where pincode = :pincode]]></snowflake:sql>
-			<snowflake:input-parameters ><![CDATA[#[%dw 2.0
-output application/json
----
-{
-	"pincode": attributes.queryParams.pincode as Number
-}]]]></snowflake:input-parameters>
-		</snowflake:select>
+		<flow-ref doc:name="Flow Reference" doc:id="e7c04034-c6ad-40ce-aadd-b249950d0adb" name="get-hospitals-by-pincodeSub_Flow"/>
 		<logger level="INFO" doc:name="After DB " doc:id="2b0e8ea2-b36a-46f8-bc69-f90310eed888" message="---------------------------------------------After DB ------------------------------------------"/>
 		<ee:transform doc:name="dbResponse">
             <ee:message>
@@ -317,23 +301,7 @@ var randomNum = (floor(random() * 9000) + 1000) as String
             </ee:message>
         </ee:transform>
 		<set-variable value="#[payload.patient_id]" doc:name="Patient_id" doc:id="a88db528-8071-40ef-9c6c-e449e3713025" variableName="Patient_id" />
-		<snowflake:insert doc:name="Insert" doc:id="96af4a98-c266-4705-a6ed-9c7d9acf61eb" config-ref="Snowflake_Config">
-			<snowflake:sql ><![CDATA[INSERT INTO patients (patient_id, firstName, lastName, age, gender, phoneNumber, address, gmail)
-VALUES (:patient_id, :firstName, :lastName, :age, :gender, :phoneNumber, :address, :gmail);]]></snowflake:sql>
-			<snowflake:input-parameters ><![CDATA[#[%dw 2.0
-output application/json
----
-{
-	patient_id: vars.Patient_id,
-	firstName: vars.requestedPayload.firstName default "",
-	lastName: vars.requestedPayload.lastName default "",
-	age: vars.requestedPayload.age as String default "",
-	gender: vars.requestedPayload.gender default "",
-	phoneNumber: vars.requestedPayload.phoneNumber default "",
-	address: vars.requestedPayload.address default "",
-	gmail: vars.requestedPayload.gmail default "",
-}]]]></snowflake:input-parameters>
-		</snowflake:insert>
+		<flow-ref doc:name="Flow Reference" doc:id="ddbfe889-4f1a-4cd6-a751-7193330d7270" name="insert-patient-data-into-dbSub_Flow"/>
 		<flow-ref doc:name="Flow Reference" doc:id="87c270a0-ab02-4327-9a0d-5542c9c6c10e" name="hospital-locator-api-email-flow" targetValue="#[vars.email]" />
 		<ee:transform doc:name="Reponse" doc:id="7d531749-1f8e-46b8-bcfc-6323f4575211" >
 			<ee:message >
