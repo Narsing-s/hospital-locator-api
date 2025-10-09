@@ -192,28 +192,37 @@ payload map (services) -> {
 ]]></ee:set-payload>
             </ee:message>
         </ee:transform>
-		<ee:transform doc:name="Response" doc:id="7aa79232-b00e-419f-a590-20799a55d268" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<choice doc:name="Choice" doc:id="4119f6a2-2963-4f34-9c69-facddfbc5774" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<ee:transform doc:name="hospitals services found for requested pincode" doc:id="2d516605-8603-4a5c-8d0f-dbba6d8af024" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
-var hospital_id = (attributes.queryParams.hospital_id default "") as String
 ---
-if (sizeOf(payload) > 0)
 {
     status: "success",
     hospital_id: vars.requestedHospital_id,
     message: "Hospital services details retrieved successfully",
     data: payload
-}
-else
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="No hospitals services found for requested pincode" doc:id="d7bd4943-1170-4da1-b3fe-bcd5708278b1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
 {
     status: "failure",
-    message: "No hospital services found for the requested hospital_id: " ++ hospital_id,
+    message: "No hospital services found for the requested hospital_id: " ++ vars.requestedHospital_id,
     data: []
-}
-]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 		<logger level="INFO" doc:name="End Flow" doc:id="5aaadca3-8209-4b9d-84d0-9fa4e70bf820" message="#[payload]"/>
     </flow>
     <flow name="get:\pincode:hospital-locator-api-config">
@@ -244,28 +253,37 @@ payload map (hospitalsDB) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<ee:transform doc:name="Response" doc:id="7e78caf8-81ad-4a32-b405-edabb6793ef6" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<choice doc:name="Choice" doc:id="51b5476a-2aff-4ae9-9f34-4c78b6e084af" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<ee:transform doc:name="Hospitals found for requested pincode" doc:id="2c130974-1cc2-4108-bb25-447cb91274a1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
-var pincode = (attributes.queryParams.pincode default "") as String
 ---
-if (sizeOf(payload) > 0)
 {
     status: "success",
     pincode: vars.requestedPincode,
     message: "Hospital details retrieved successfully",
     data: payload
-}
-else
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="No hospitals found for requested pincode" doc:id="7977a1d3-9154-4568-be62-16f78e4d045c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
 {
     status: "failure",
-    message: "No hospital found for the requested pincode: " ++ pincode,
+    message: "No hospital found for the requested pincode: " ++ vars.requestedPincode,
     data: []
-}
-]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 		<logger level="INFO" doc:name="End Flow" doc:id="9ce612f1-f08e-483f-ad96-5399b246771e" message="#[payload]"/>
     </flow>
     <flow name="post:\patients:application\json:hospital-locator-api-config">
