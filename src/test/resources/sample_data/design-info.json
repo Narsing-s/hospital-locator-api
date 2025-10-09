@@ -1,0 +1,14 @@
+{
+  "sampleData": {
+    "7aa79232-b00e-419f-a590-20799a55d268": {
+      "vars-inputPayload": "sample_data/defaultnumbertype.dwl",
+      "vars-requestedHospital_id": "sample_data/defaultnumbertype_1.dwl",
+      "payload": "sample_data/list_json.json",
+      "vars-hospital_id": "sample_data/list_json_1.json"
+    },
+    "2d516605-8603-4a5c-8d0f-dbba6d8af024": {
+      "vars-requestedHospital_id": "sample_data/defaultnumbertype_2.dwl",
+      "payload": "sample_data/list_json_2.json"
+    }
+  }
+}

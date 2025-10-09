@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:snowflake="http://www.mulesoft.org/schema/mule/snowflake" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd">
+	<sub-flow name="get-hospitals-servicesSub_Flow" doc:id="5867853e-10e2-4362-9666-908f256a8580" >
+		<snowflake:select doc:name="Select" doc:id="3da77512-d760-4f08-a2c3-04db28e80539" config-ref="Snowflake_Config" >
+			<snowflake:sql ><![CDATA[select * from services where hospital_id = :hospital_id]]></snowflake:sql>
+			<snowflake:input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"hospital_id": vars.requestedHospital_id
+}]]]></snowflake:input-parameters>
+		</snowflake:select>
+	</sub-flow>
+</mule>
