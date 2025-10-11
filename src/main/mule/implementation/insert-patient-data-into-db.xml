@@ -4,8 +4,8 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd">
-	<sub-flow name="insert-patient-data-into-dbSub_Flow" doc:id="f769d44a-cad9-48a3-804f-394a1b764fed" >
-		<snowflake:insert doc:name="Insert" doc:id="64b7ddb0-982a-46ae-8ba3-078002a311ac" config-ref="Snowflake_Config" >
+	<sub-flow name="insert-patient-data-into-dbSub_Flow" doc:id="85a064a9-c031-48e5-948f-bff0fe650809" >
+		<snowflake:insert doc:name="Insert" doc:id="fa408ced-56d4-4699-834e-fce9b7fe544a" config-ref="Snowflake_Config" >
 			<snowflake:sql ><![CDATA[INSERT INTO patients (patient_id, firstName, lastName, age, gender, phoneNumber, address, gmail)
 VALUES (:patient_id, :firstName, :lastName, :age, :gender, :phoneNumber, :address, :gmail);]]></snowflake:sql>
 			<snowflake:input-parameters ><![CDATA[#[%dw 2.0
@@ -14,7 +14,7 @@ output application/json
 {
 	patient_id: vars.Patient_id,
 	firstName: vars.requestedPayload.firstName default "",
-	lastName: vars.requestedPayload.lastName default "",
+	lastName: vars.requestedPayload.LastName default "",
 	age: vars.requestedPayload.age as String default "",
 	gender: vars.requestedPayload.gender default "",
 	phoneNumber: vars.requestedPayload.phoneNumber default "",

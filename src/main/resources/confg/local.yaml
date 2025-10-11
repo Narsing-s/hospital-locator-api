@@ -1,5 +1,5 @@
 http:
- listner:
+ listener:
   host: "localhost"
   port: "9081"
   

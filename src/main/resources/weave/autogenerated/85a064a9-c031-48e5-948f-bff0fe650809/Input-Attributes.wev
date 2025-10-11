@@ -1,6 +1,6 @@
 %dw 2.0
 
-type auto_93ddfed7_f65c_43fe_a34d_7d6b9db8cd7d_Input_Attributes = {|
+type auto_85a064a9_c031_48e5_948f_bff0fe650809_Input_Attributes = {|
   clientCertificate?: {|
     publicKey?: {|  |}, 
     "type"?: String, 
@@ -9,7 +9,7 @@ type auto_93ddfed7_f65c_43fe_a34d_7d6b9db8cd7d_Input_Attributes = {|
   headers: {|  |}, 
   listenerPath: String, 
   method: String, 
-  queryParams: {| pincode: Number |}, 
+  queryParams: {|  |}, 
   queryString: String, 
   relativePath: String, 
   remoteAddress: String, 
