@@ -1,6 +1,7 @@
 {
-  "minMuleVersion": "4.8.0",
-  "javaSpecificationVersions": [
-    "17"
-  ]
+	"secureProperties": [
+		"anypoint.platform.client_id",
+		"anypoint.platform.client_secret"
+	],
+	"minMuleVersion": "4.8.0"
 }
