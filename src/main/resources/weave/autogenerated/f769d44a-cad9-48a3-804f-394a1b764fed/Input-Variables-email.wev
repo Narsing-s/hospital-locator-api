@@ -1,4 +1,0 @@
-%dw 2.0
-
-type auto_f769d44a_cad9_48a3_804f_394a1b764fed_Input_Variables_email = String
-

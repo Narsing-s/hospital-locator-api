@@ -124,8 +124,8 @@ output application/json
     </flow>
 	<sub-flow name="hospital-locator-api-email-flow" doc:id="357d357a-78d4-41b0-845c-8ac8cc33f5af" >
 		<logger level="INFO" doc:name="Before email sent" doc:id="c352e2e1-3fe6-4c0e-9d80-6b013230c102" message="------------------------------Before email sent-------------------------------"/>
-		<set-variable value="#[vars.requestedPayload.firstName as String]" doc:name="firstName" doc:id="8800447d-07a1-4421-ad2e-3491f5c07cd7" variableName="firstName"/>
-		<set-variable value='#[%dw 2.0&#10;output text/plain&#10;---&#10;"Hi " ++ vars.requestedPayload.firstName as String ++" your registration is completed successfully and your patient_id is "++ vars.Patient_id]' doc:name="emailBody" doc:id="37e1eba1-85d3-4e24-8482-4d7911b563ae" variableName="emailBody" />
+		<set-variable value='#[vars.RequestedPayload.firstName as String ++" " ++ vars.RequestedPayload.LastName as String]' doc:name="firstName" doc:id="8800447d-07a1-4421-ad2e-3491f5c07cd7" variableName="firstName"/>
+		<set-variable value='#[%dw 2.0&#10;output text/plain&#10;---&#10;"Hi " ++ vars.firstName as String ++ " your registration is completed successfully and your patient_id is " ++ (vars.patient_id as String)]' doc:name="emailBody" doc:id="37e1eba1-85d3-4e24-8482-4d7911b563ae" variableName="emailBody" />
 		<parse-template doc:name="Parse Template" doc:id="09929072-3dbe-4646-a301-692fa4bf07c5" >
 			<content >&lt;html&gt;
 &lt;head&gt;
@@ -167,8 +167,8 @@ output application/json
 	<flow name="get:\hospitals\(hospital_id)\services:hospital-locator-api-config">
         <set-variable value="#[attributes.uriParams.hospital_id as Number]" doc:name="requestedHospital_id" doc:id="a6ba33fd-19da-4d99-b85b-2fda55ba71c4" variableName="requestedHospital_id"/>
 		<logger level="INFO" doc:name="Start API" doc:id="09749e8e-6b7f-4e2a-ac76-a9d8d63c99ce" message="------------------------------------------Before DB------------------------------" />
-		<flow-ref doc:name="Flow Reference" doc:id="81682602-856c-4caa-84b2-eb59250237df" name="get-hospitals-servicesSub_Flow"/>
-		<logger level="INFO" doc:name="After DB" doc:id="d7e24d4a-f0b7-4884-94e7-3567652b6260" message="------------------------------------------------After DB--------------------------------------------"/>
+		<flow-ref doc:name="Flow Reference" doc:id="df883019-9fb2-410b-a833-f0eb508c5316" name="get-hospitals-servicesSub_Flow"/>
+		<logger level="INFO" doc:name="After DB" doc:id="ddb22ae5-3836-40cc-92e7-010f10b22f12" message="------------------------------------------------After DB--------------------------------------------" />
 		<ee:transform doc:name="DB Response">
             <ee:variables>
                 <ee:set-variable variableName="hospital_id"><![CDATA[%dw 2.0
@@ -228,8 +228,8 @@ output application/json
     <flow name="get:\pincode:hospital-locator-api-config">
         <set-variable value="#[attributes.queryParams.pincode as Number]" doc:name="requestedPincode" doc:id="11d6a409-4b88-4955-ad7e-278a020bd4fd" variableName="requestedPincode"/>
 		<logger level="INFO" doc:name="Before DB" doc:id="bcc362ef-4aea-40ef-be44-e2d4c878c520" message="-------------------------------------------Before DB-----------------------------------" />
-		<flow-ref doc:name="Flow Reference" doc:id="e7c04034-c6ad-40ce-aadd-b249950d0adb" name="get-hospitals-by-pincodeSub_Flow"/>
-		<logger level="INFO" doc:name="After DB " doc:id="2b0e8ea2-b36a-46f8-bc69-f90310eed888" message="---------------------------------------------After DB ------------------------------------------"/>
+		<flow-ref doc:name="Flow Reference" doc:id="e7f2240f-0ea0-4e73-a2a9-fac3a2f3c30a" name="get-hospitals-by-pincodeSub_Flow"/>
+		<logger level="INFO" doc:name="After DB " doc:id="be6a1983-acf9-42b1-9550-5ffd9edb8c4f" message="---------------------------------------------After DB ------------------------------------------" />
 		<ee:transform doc:name="dbResponse">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -287,7 +287,7 @@ output application/json
 		<logger level="INFO" doc:name="End Flow" doc:id="9ce612f1-f08e-483f-ad96-5399b246771e" message="#[payload]"/>
     </flow>
     <flow name="post:\patients:application\json:hospital-locator-api-config">
-        <set-variable value="#[payload]" doc:name="requestedPayload" doc:id="beabad49-7ceb-4698-b8da-bbf146b21e01" variableName="requestedPayload"/>
+		<set-variable value="#[payload]" doc:name="RequestedPayload" doc:id="f8ec866c-4c96-4699-bdd9-d7109fc7af34" variableName="requestedPayload"/>
 		<set-variable value="#[payload.gmail]" doc:name="email" doc:id="c042fa2b-7b05-4c5d-ab89-58842011b87f" variableName="email"/>
 		<choice doc:name="Choice" doc:id="346da34a-2a81-49ac-89a9-0cc6e0a2192e" >
 			<when expression="#[payload.firstName == null or payload.LastName == null or payload.age == null or payload.gender == null or payload.phoneNumber ==null or payload.address == null or payload.gmail == null]">
@@ -313,14 +313,14 @@ var randomNum = (floor(random() * 9000) + 1000) as String
 {
   patient_id: first3 ++ randomNum ++ last3,
   status: "success",
-  patientDetails: payload
+  patientDetailes: payload
 }
 ]]></ee:set-payload>
             </ee:message>
         </ee:transform>
 		<set-variable value="#[payload.patient_id]" doc:name="Patient_id" doc:id="a88db528-8071-40ef-9c6c-e449e3713025" variableName="Patient_id" />
-		<flow-ref doc:name="Flow Reference" doc:id="ddbfe889-4f1a-4cd6-a751-7193330d7270" name="insert-patient-data-into-dbSub_Flow"/>
-		<flow-ref doc:name="Flow Reference" doc:id="87c270a0-ab02-4327-9a0d-5542c9c6c10e" name="hospital-locator-api-email-flow" targetValue="#[vars.email]" />
+		<flow-ref doc:name="Flow Reference" doc:id="224230ff-eae2-41f6-abe5-7b2ed6315ef1" name="insert-patient-data-into-dbSub_Flow"/>
+		<flow-ref doc:name="Flow Reference" doc:id="25915fac-56c7-4e6b-91bd-eb00d57c1fa2" name="hospital-locator-api-email-flow" targetValue="#[vars.email]" />
 		<ee:transform doc:name="Reponse" doc:id="7d531749-1f8e-46b8-bcfc-6323f4575211" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
