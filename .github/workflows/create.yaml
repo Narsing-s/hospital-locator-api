@@ -1,0 +1,16 @@
+#
+# This action is run when a new release is created via github. The release artifact is created and updated and the
+# develop pom version is bumped.
+#
+ 
+name: "Create Release"
+on:
+  release:
+    types: [created]
+ 
+# just call the common flow
+jobs:
+  call-mule-create-release:
+    uses: Narsing-s/.github/workflows/mule-create-release.yml@v1.0.15
+    with:
+      release_ref: ${{ github.ref_name }}
