@@ -16,6 +16,3 @@ on:
 jobs:
   call-mule-deploy-prod:
     uses: Narsing-s/.github/workflows/mule-deploy-prod.yml@v1.0.15
-    with:
-      replicas: "2"
-      use_object_store: true
