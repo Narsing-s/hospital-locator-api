@@ -1,208 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Hospital Locator by Pincode</title>
+ 
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; background:#f4f7fb; margin:0; padding:20px; color:#0b2545; }
-    .wrap { max-width:900px; margin:30px auto; background:#fff; border-radius:10px; padding:24px; box-shadow:0 6px 18px rgba(8,34,68,0.08); }
-    h1 { margin:0 0 12px 0; font-size:22px; }
-    .controls { display:flex; gap:10px; align-items:center; margin-bottom:16px; }
-    input[type="text"]{ padding:10px 12px; font-size:16px; border-radius:6px; border:1px solid #cfd8e6; width:220px; }
-    button { padding:10px 14px; border-radius:6px; border:none; background:#007bff; color:#fff; cursor:pointer; font-weight:600; }
-    button:disabled { opacity:.6; cursor:default; }
-    .hint { color:#6b7b95; font-size:13px; margin-bottom:8px; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; }
-    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid #eef2f8; font-size:14px; }
-    th { background:#f7fbff; color:#06304a; font-weight:700; }
-    .empty { padding:18px; background:#fff8f0; border-radius:6px; color:#7a4b00; margin-top:12px; }
-    .error { color:#b00020; margin-top:12px; }
-    .loading { margin-left:8px; font-size:14px; color:#556b8a; }
-    @media(max-width:600px){ .controls{flex-direction:column; align-items:stretch} input{width:100%} }
+    body{
+      font-family: Arial, sans-serif;
+      background:#eef5ff;
+      padding:25px;
+      text-align:center;
+    }
+    .container{
+      width:500px;
+      margin:auto;
+      background:white;
+      padding:25px;
+      border-radius:10px;
+      box-shadow:0 0 12px rgba(0,0,0,0.15);
+    }
+    input{
+      width:85%;
+      padding:12px;
+      font-size:16px;
+      border-radius:8px;
+      border:1px solid #bbb;
+      margin-top:10px;
+    }
+    button{
+      margin-top:15px;
+      padding:12px 30px;
+      font-size:17px;
+      background:#0066ff;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    button:hover{ background:#004ecc;}
+ 
+    .card{
+      background:#f4fbff;
+      padding:15px;
+      margin-top:10px;
+      border-radius:8px;
+      text-align:left;
+    }
+    .error-box{
+      margin-top:15px;
+      background:#ffdddd;
+      padding:15px;
+      border-radius:8px;
+      border-left:6px solid red;
+      font-weight:bold;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>🏥 Hospital Locator — Search by Pincode</h1>
-    <p class="hint">Enter a pincode and click <strong>Search</strong>. Results show <em>hospital-id, name, address, pincode, contact</em>.</p>
  
-    <div class="controls">
-      <input id="pincode" type="text" inputmode="numeric" maxlength="6" placeholder="Enter pincode (e.g. 500081)">
-      <div>
-        <button id="searchBtn" onclick="searchHospitals()">Search</button>
-        <span id="status" class="loading" style="display:none">Loading…</span>
-      </div>
-    </div>
+<h2>🏥 Hospital Locator Using Pincode</h2>
+<p>Enter a pincode to find hospitals in that area</p>
  
-    <div id="message"></div>
-    <div id="results"></div>
+<div class="container">
+  <input type="text" id="pin" placeholder="Enter Pincode"/>
+  <button onclick="fetchHospitals()">Search</button>
  
-    <p class="hint" style="margin-top:14px">
-      Backend expectations:
-      <br>
-      • The API should accept pincode as query param or path param and return JSON array of hospitals.
-      <br>
-      • Example responses shown below.
-    </p>
- 
-    <pre style="background:#f6f9ff;padding:12px;border-radius:6px;font-size:13px;color:#102036;">
-// Example API patterns (choose whichever your backend supports)
-// 1) Query param:
-GET https://api.example.com/hospitals?pincode=500081
- 
-// 2) Path param:
-GET https://api.example.com/hospitals/pincode/500081
- 
-// Expected JSON response (array):
-[
-  {
-    "hospitalId": "HSP1001",
-    "name": "Apollo Hospital",
-    "address": "Road #1, Hyderabad",
-    "pincode": "500081",
-    "contact": "040-12345678"
-  },
-  {
-    "hospitalId": "HSP1002",
-    "name": "Care Hospital",
-    "address": "Street 5, Hyderabad",
-    "pincode": "500081",
-    "contact": "040-87654321"
-  }
-]
-    </pre>
-  </div>
+  <div id="results"></div>
+</div>
  
 <script>
-  // ====== CONFIGURE THIS =======
-  // Option A: Query param style (uncomment and set)
-  // const API_URL = "https://your-api-domain.com/hospitals?pincode=";
  
-  // Option B: Path param style (uncomment and set)
-  // const API_URL = "https://your-api-domain.com/hospitals/pincode/";
+  // 📌 Replace with your MuleSoft/Node/Java API
+  const API_URL = "https://your-api-url/hospitals?pincode=";
  
-  // Example placeholder (update before using)
-  const API_URL = "https://<your-api-domain>/hospitals?pincode=";
-  // ==============================
+  async function fetchHospitals(){
+    let pin = document.getElementById("pin").value.trim();
+    if(pin === ""){ alert("Please enter pincode"); return; }
  
-  const searchBtn = document.getElementById('searchBtn');
-  const statusEl = document.getElementById('status');
-  const resultsEl = document.getElementById('results');
-  const messageEl = document.getElementById('message');
+    try{
+      const response = await fetch(API_URL + pin);
+      const result = await response.json();
  
-  function setLoading(loading){
-    statusEl.style.display = loading ? 'inline' : 'none';
-    searchBtn.disabled = loading;
-  }
+      let output="";
  
-  function showError(msg){
-    messageEl.innerHTML = '<div class="error">' + msg + '</div>';
-  }
- 
-  function clearMessages(){
-    messageEl.innerHTML = '';
-    resultsEl.innerHTML = '';
-  }
- 
-  async function searchHospitals(){
-    clearMessages();
-    const p = document.getElementById('pincode').value.trim();
- 
-    if(!/^\d{6}$/.test(p)){
-      showError('Please enter a valid 6-digit pincode.');
-      return;
-    }
- 
-    setLoading(true);
- 
-    try {
-      // Build final URL: if API_URL already ends with '=' or '/', it will concatenate properly
-      const url = API_URL + encodeURIComponent(p);
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-          // Add Authorization header here if your API requires a token:
-          // 'Authorization': 'Bearer <token>'
-        }
-      });
- 
-      if(!res.ok){
-        // show server error or 404
-        const txt = await res.text().catch(()=>res.statusText);
-        showError('Server returned ' + res.status + ' — ' + txt);
-        setLoading(false);
-        return;
+      // ⚠ If no data exists --> show failure format message
+      if(result.status === "failure"){
+        output = `<div class="error-box">
+                    ${result.message}
+                  </div>`;
+      }
+      else{
+        // ✔ Show hospital list
+        result.data.forEach(h => {
+          output += `
+          <div class="card">
+            <b>Hospital ID:</b> ${h.hospitalId}<br>
+            <b>Name:</b> ${h.name}<br>
+            <b>Address:</b> ${h.address}<br>
+            <b>Pincode:</b> ${h.pincode}<br>
+            <b>Contact:</b> ${h.contact}<br>
+          </div>`;
+        });
       }
  
-      const json = await res.json();
- 
-      if(!Array.isArray(json) || json.length === 0){
-        resultsEl.innerHTML = '<div class="empty">No hospitals found for pincode ' + p + '.</div>';
-        setLoading(false);
-        return;
-      }
- 
-      // Build table
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Hospital ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Pincode</th>
-            <th>Contact</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const tbody = table.querySelector('tbody');
- 
-      json.forEach(h => {
-        const id = h.hospitalId || h.hospital_id || h.id || '';
-        const name = h.name || '';
-        const address = h.address || '';
-        const pin = h.pincode || h.pin || '';
-        const contact = h.contact || h.phone || h.mobile || '';
- 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHtml(id)}</td>
-          <td>${escapeHtml(name)}</td>
-          <td>${escapeHtml(address)}</td>
-          <td>${escapeHtml(pin)}</td>
-          <td>${escapeHtml(contact)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
- 
-      resultsEl.appendChild(table);
-    } catch (err) {
-      console.error(err);
-      showError('Error fetching hospital data. See console for details.');
-    } finally {
-      setLoading(false);
+      document.getElementById("results").innerHTML = output;
+    }
+    catch(err){
+      document.getElementById("results").innerHTML =
+      `<div class="error-box">API Error: Unable to fetch data</div>`;
     }
   }
- 
-  // small helper to avoid HTML injection when inserting data
-  function escapeHtml(str){
-    if(str === null || str === undefined) return '';
-    return String(str)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
- 
-  // OPTIONAL: submit on Enter
-  document.getElementById('pincode').addEventListener('keydown', function(e){
-    if(e.key === 'Enter') searchHospitals();
-  });
 </script>
+ 
 </body>
 </html>
  
