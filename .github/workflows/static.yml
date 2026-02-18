@@ -1,4 +1,4 @@
-name: Build and Deploy static site to Pages
+name: Deploy static content to Pages
 
 on:
   push:
@@ -25,26 +25,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      # If your build outputs to 'dist' (Vite, etc.) or 'build' (CRA), adjust accordingly
-      - name: Build
-        run: npm run build
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      # If your static files are in the repo root, keep path: "."
+      # If you store them in a folder (e.g., "docs" or "site"), change path accordingly.
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./dist"   # or './build' or your actual output folder
+          path: "."
 
       - name: Deploy to GitHub Pages
         id: deployment
