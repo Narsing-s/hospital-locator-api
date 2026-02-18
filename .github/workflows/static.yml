@@ -1,4 +1,4 @@
-name: Deploy static content to Pages
+name: Build and Deploy static site to Pages
 
 on:
   push:
@@ -25,15 +25,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Node setup without cache (since no lockfile is present)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # If your static files are in the repo root, keep path: "."
-      # If you store them in a folder (e.g., "docs" or "site"), change path accordingly.
+      # If your build outputs to 'dist', keep as is; if 'build' or something else, change it.
+      - name: Create .nojekyll
+        run: echo > ./dist/.nojekyll
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "."
+          path: "./dist"
 
       - name: Deploy to GitHub Pages
         id: deployment
