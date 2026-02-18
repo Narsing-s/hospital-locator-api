@@ -1,116 +1,46 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Hospital Locator by Pincode</title>
- 
+  <meta charset="utf-8">
+  <title>Hospital Locator API</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{
-      font-family: Arial, sans-serif;
-      background:#eef5ff;
-      padding:25px;
-      text-align:center;
-    }
-    .container{
-      width:500px;
-      margin:auto;
-      background:white;
-      padding:25px;
-      border-radius:10px;
-      box-shadow:0 0 12px rgba(0,0,0,0.15);
-    }
-    input{
-      width:85%;
-      padding:12px;
-      font-size:16px;
-      border-radius:8px;
-      border:1px solid #bbb;
-      margin-top:10px;
-    }
-    button{
-      margin-top:15px;
-      padding:12px 30px;
-      font-size:17px;
-      background:#0066ff;
-      color:white;
-      border:none;
-      border-radius:8px;
-      cursor:pointer;
-    }
-    button:hover{ background:#004ecc;}
- 
-    .card{
-      background:#f4fbff;
-      padding:15px;
-      margin-top:10px;
-      border-radius:8px;
-      text-align:left;
-    }
-    .error-box{
-      margin-top:15px;
-      background:#ffdddd;
-      padding:15px;
-      border-radius:8px;
-      border-left:6px solid red;
-      font-weight:bold;
-    }
+    html, body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 0; }
+    header { background: #0f62fe; color: #fff; padding: 24px 16px; }
+    main { padding: 24px 16px; max-width: 900px; margin: 0 auto; }
+    code, pre { background: #f6f8fa; padding: 2px 6px; border-radius: 4px; }
+    a { color: #0f62fe; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer { margin-top: 40px; padding: 16px; text-align: center; color: #666; border-top: 1px solid #eee; }
   </style>
 </head>
 <body>
- 
-<h2>🏥 Hospital Locator Using Pincode</h2>
-<p>Enter a pincode to find hospitals in that area</p>
- 
-<div class="container">
-  <input type="text" id="pin" placeholder="Enter Pincode"/>
-  <button onclick="fetchHospitals()">Search</button>
- 
-  <div id="results"></div>
-</div>
- 
-<script>
- 
-  // 📌 Replace with your MuleSoft/Node/Java API
-  const API_URL = "https://your-api-url/hospitals?pincode=";
- 
-  async function fetchHospitals(){
-    let pin = document.getElementById("pin").value.trim();
-    if(pin === ""){ alert("Please enter pincode"); return; }
- 
-    try{
-      const response = await fetch(API_URL + pin);
-      const result = await response.json();
- 
-      let output="";
- 
-      // ⚠ If no data exists --> show failure format message
-      if(result.status === "failure"){
-        output = `<div class="error-box">
-                    ${result.message}
-                  </div>`;
-      }
-      else{
-        // ✔ Show hospital list
-        result.data.forEach(h => {
-          output += `
-          <div class="card">
-            <b>Hospital ID:</b> ${h.hospitalId}<br>
-            <b>Name:</b> ${h.name}<br>
-            <b>Address:</b> ${h.address}<br>
-            <b>Pincode:</b> ${h.pincode}<br>
-            <b>Contact:</b> ${h.contact}<br>
-          </div>`;
-        });
-      }
- 
-      document.getElementById("results").innerHTML = output;
-    }
-    catch(err){
-      document.getElementById("results").innerHTML =
-      `<div class="error-box">API Error: Unable to fetch data</div>`;
-    }
-  }
-</script>
- 
+  <header>
+    <h1>Hospital Locator API</h1>
+    <p>Documentation & status</p>
+  </header>
+  <main>
+    <h2>Welcome</h2>
+    <p>This is a placeholder static page published via GitHub Pages using Actions.</p>
+
+    <h3>API Endpoints</h3>
+    <ul>
+      <li><code>GET /api/hospitals</code> — List hospitals</li>
+      <li><code>GET /api/hospitals/:id</code> — Hospital details</li>
+      <li><code>GET /api/search?query=</code> — Search by name/location</li>
+    </ul>
+
+    <h3>Try locally</h3>
+    <pre><code># Serve locally to preview (Python 3)
+python -m http.server 8080</code></pre>
+
+    <p>Update this page with your actual docs or link to Swagger/OpenAPI if available.</p>
+  </main>
+  <footer>© {{year}} Hospital Locator API</footer>
+  <script>
+    // Simple year injection
+    document.body.innerHTML = document.body.innerHTML.replace('{{year}}', new Date().getFullYear());
+  </script>
 </body>
 </html>
- 
+``
