@@ -9,8 +9,8 @@ db:
   warehouse: "COMPUTE_WH"
   database: "MYDATABASE"
   schema: "TEST"
-  user: "SINGSING"
-  password: "Singsing@123456789"
+  user: "Narsi"
+  password: "Narsi@123456789"
   role: "ACCOUNTADMIN"
 
 email:
