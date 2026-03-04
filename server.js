@@ -1,6 +1,6 @@
 // server.js
 const express = require("express");
-const fetch = require("node-fetch"); // Make sure to install with `npm install node-fetch`
+const fetch = require("node-fetch"); // ✅ Add node-fetch for Node.js
 
 const app = express();
 app.use(express.json());
@@ -18,15 +18,15 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
    HELPER FUNCTION
 ========================= */
 
-// Safe parser to handle both JSON and HTML responses
+// Safe JSON parser to prevent 'Unexpected token' errors
 async function safeParse(response) {
   const text = await response.text();
   try {
-    return JSON.parse(text); // Try JSON first
+    return JSON.parse(text);
   } catch (err) {
     return {
-      message: "Non-JSON response",
-      rawResponse: text // keep HTML for new patient registration
+      error: "Invalid JSON from backend",
+      rawResponse: text
     };
   }
 }
@@ -73,16 +73,21 @@ app.get("/api/services/:id", async (req, res) => {
 });
 
 // 👤 Create patient
-app.post("/api/patients", async (req, res) => {
+app.post("/api/patients", async (req, res) => { // ✅ updated endpoint to /patients
   try {
     const payload = req.body;
 
-    // Validate required fields
-    const required = ["firstName", "lastName", "age", "gender", "phoneNumber", "address", "email"];
-    for (let field of required) {
-      if (!payload[field]) {
-        return res.status(400).json({ error: `Missing field: ${field}` });
-      }
+    // Optional: Validate required fields before sending to API
+    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || (!payload.email && !payload.gmail)) {
+      return res.status(400).json({
+        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email or gmail"
+      });
+    }
+
+    // If backend expects "email" but client sends "gmail", map it
+    if (!payload.email && payload.gmail) {
+      payload.email = payload.gmail;
+      delete payload.gmail;
     }
 
     const response = await fetch(`${BASE_URL}/patients`, {
@@ -95,15 +100,7 @@ app.post("/api/patients", async (req, res) => {
       body: JSON.stringify(payload)
     });
 
-    const text = await response.text();
-    let data;
-
-    try {
-      data = JSON.parse(text); // JSON for existing patient
-    } catch {
-      data = { message: "Patient successfully registered", rawHTML: text }; // HTML for new patient
-    }
-
+    const data = await safeParse(response);
     res.status(response.status).json(data);
 
   } catch (err) {
@@ -171,7 +168,7 @@ pre{
 <input id="gender" placeholder="Gender">
 <input id="phoneNumber" placeholder="Phone">
 <input id="address" placeholder="Address">
-<input id="email" placeholder="Email">
+<input id="email" placeholder="Email or Gmail">
 <button onclick="createPatient()">Create</button>
 
 <div id="result"></div>
@@ -218,7 +215,7 @@ async function createPatient(){
       address:document.getElementById("address").value,
       email:document.getElementById("email").value
     };
-    const res=await fetch("/api/patients",{
+    const res=await fetch("/api/patients",{ // ✅ match backend route /patients
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(payload)
