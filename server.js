@@ -172,7 +172,7 @@ pre{
 <input id="gender" placeholder="Gender">
 <input id="phoneNumber" placeholder="Phone">
 <input id="address" placeholder="Address">
-<input id="email" placeholder="Email">
+<input id="gmail" placeholder="gmail">
 <button onclick="createPatient()">Create</button>
 
 <div id="result"></div>
@@ -217,7 +217,7 @@ async function createPatient(){
       gender:document.getElementById("gender").value,
       phoneNumber:document.getElementById("phoneNumber").value,
       address:document.getElementById("address").value,
-      email:document.getElementById("email").value
+      gmail:document.getElementById("gmail").value
     };
     const res=await fetch("/api/patient",{
       method:"POST",
