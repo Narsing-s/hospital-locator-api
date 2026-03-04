@@ -74,23 +74,12 @@ app.get("/api/services/:id", async (req, res) => {
 // 👤 Create patient
 app.post("/api/patient", async (req, res) => {
   try {
-    // Clone the payload to avoid mutating req.body
-    const payload = { ...req.body };
-
-    // ✅ Auto-correct field names
-    if (payload.LastName) {
-      payload.lastName = payload.LastName;
-      delete payload.LastName;
-    }
-    if (payload.gmail) {
-      payload.gmail = payload.gmail;
-      delete payload.gmail;
-    }
+    const payload = req.body;
 
     // Optional: Validate required fields before sending to API
-    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.gmail) {
+    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
       return res.status(400).json({
-        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, gmail"
+        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email"
       });
     }
 
@@ -172,7 +161,7 @@ pre{
 <input id="gender" placeholder="Gender">
 <input id="phoneNumber" placeholder="Phone">
 <input id="address" placeholder="Address">
-<input id="gmail" placeholder="gmail">
+<input id="email" placeholder="Email">
 <button onclick="createPatient()">Create</button>
 
 <div id="result"></div>
@@ -217,7 +206,7 @@ async function createPatient(){
       gender:document.getElementById("gender").value,
       phoneNumber:document.getElementById("phoneNumber").value,
       address:document.getElementById("address").value,
-      gmail:document.getElementById("gmail").value
+      email:document.getElementById("email").value
     };
     const res=await fetch("/api/patient",{
       method:"POST",
