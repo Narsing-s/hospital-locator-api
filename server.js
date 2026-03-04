@@ -1,5 +1,4 @@
 const express = require("express");
-const fetch = require("node-fetch");
 
 const app = express();
 app.use(express.json());
@@ -8,9 +7,9 @@ const PORT = process.env.PORT || 3000;
 
 const BASE_URL = "https://hospital-locator-api-jik9pb.5sc6y6-3.usa-e2.cloudhub.io";
 
-// 🔐 PUT REAL VALUES HERE
-const CLIENT_ID = "b78eb419b5b340d5826b815b76346975";
-const CLIENT_SECRET = "8c45f7039f764625A6278eB4c057E611";
+// 🔐 Secure way (DO NOT hardcode secrets)
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 /* =========================
    BACKEND API ROUTES
@@ -35,12 +34,13 @@ app.get("/api/pincode", async (req, res) => {
 
     const data = await response.json();
     res.status(response.status).json(data);
+
   } catch (err) {
     res.status(500).json({ error: "Server Error: " + err.message });
   }
 });
 
-// 🔎 Get hospitals by city (NEW)
+// 🔎 Get hospitals by city
 app.get("/api/city", async (req, res) => {
   try {
     if (!req.query.city) {
@@ -59,6 +59,7 @@ app.get("/api/city", async (req, res) => {
 
     const data = await response.json();
     res.status(response.status).json(data);
+
   } catch (err) {
     res.status(500).json({ error: "Server Error: " + err.message });
   }
@@ -67,6 +68,7 @@ app.get("/api/city", async (req, res) => {
 // 🏥 Get hospital services
 app.get("/api/services/:id", async (req, res) => {
   try {
+
     const response = await fetch(
       `${BASE_URL}/hospitals/${req.params.id}/services`,
       {
@@ -79,6 +81,7 @@ app.get("/api/services/:id", async (req, res) => {
 
     const data = await response.json();
     res.status(response.status).json(data);
+
   } catch (err) {
     res.status(500).json({ error: "Server Error: " + err.message });
   }
@@ -87,6 +90,7 @@ app.get("/api/services/:id", async (req, res) => {
 // 👤 Create patient
 app.post("/api/patient", async (req, res) => {
   try {
+
     const response = await fetch(`${BASE_URL}/patients`, {
       method: "POST",
       headers: {
@@ -99,6 +103,7 @@ app.post("/api/patient", async (req, res) => {
 
     const data = await response.json();
     res.status(response.status).json(data);
+
   } catch (err) {
     res.status(500).json({ error: "Server Error: " + err.message });
   }
@@ -115,12 +120,34 @@ app.get("/", (req, res) => {
 <head>
 <title>Hospital Locator</title>
 <style>
-body{font-family:Segoe UI;background:linear-gradient(135deg,#1e3c72,#2a5298);color:white;text-align:center;padding:20px;}
-input,button{padding:10px;margin:5px;border-radius:8px;border:none;}
-button{background:#00c6ff;color:white;cursor:pointer;}
-button:hover{background:#0072ff;}
-.card{background:rgba(255,255,255,0.2);padding:15px;margin:10px;border-radius:10px;}
-pre{background:black;color:#00ff90;padding:15px;border-radius:10px;text-align:left;}
+body{
+  font-family:Segoe UI;
+  background:linear-gradient(135deg,#1e3c72,#2a5298);
+  color:white;
+  text-align:center;
+  padding:20px;
+}
+input,button{
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#00c6ff;
+  color:white;
+  cursor:pointer;
+}
+button:hover{
+  background:#0072ff;
+}
+pre{
+  background:black;
+  color:#00ff90;
+  padding:15px;
+  border-radius:10px;
+  text-align:left;
+}
 </style>
 </head>
 <body>
@@ -166,9 +193,11 @@ async function searchPincode(){
     const pincode=document.getElementById("pincode").value;
     const res=await fetch("/api/pincode?pincode="+pincode);
     const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre style='color:red'>"+err.message+"</pre>";
   }
 }
 
@@ -177,9 +206,11 @@ async function searchCity(){
     const city=document.getElementById("city").value;
     const res=await fetch("/api/city?city="+city);
     const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre style='color:red'>"+err.message+"</pre>";
   }
 }
 
@@ -188,9 +219,11 @@ async function services(){
     const id=document.getElementById("hospitalId").value;
     const res=await fetch("/api/services/"+id);
     const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
-    document.getElementByById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre style='color:red'>"+err.message+"</pre>";
   }
 }
 
@@ -213,9 +246,11 @@ async function createPatient(){
     });
 
     const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
+    document.getElementById("result").innerHTML=
+      "<pre style='color:red'>"+err.message+"</pre>";
   }
 }
 
