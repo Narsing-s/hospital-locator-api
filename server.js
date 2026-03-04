@@ -1,6 +1,5 @@
 // server.js
 const express = require("express");
-const fetch = require("node-fetch"); // ✅ Add node-fetch for Node.js
 
 const app = express();
 app.use(express.json());
@@ -72,22 +71,26 @@ app.get("/api/services/:id", async (req, res) => {
   }
 });
 
-// 👤 Create patient
-app.post("/api/patients", async (req, res) => { // ✅ updated endpoint to /patients
+// 👤 Create patient (supports both LastName/gmail and lastName/email)
+app.post("/api/patients", async (req, res) => {
   try {
-    const payload = req.body;
+    const payload = { ...req.body };
 
-    // Optional: Validate required fields before sending to API
-    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || (!payload.email && !payload.gmail)) {
-      return res.status(400).json({
-        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email or gmail"
-      });
+    // Auto-correct input fields
+    if (payload.LastName) {
+      payload.lastName = payload.LastName;
+      delete payload.LastName;
     }
-
-    // If backend expects "email" but client sends "gmail", map it
-    if (!payload.email && payload.gmail) {
+    if (payload.gmail) {
       payload.email = payload.gmail;
       delete payload.gmail;
+    }
+
+    // Validate required fields
+    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
+      return res.status(400).json({
+        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email"
+      });
     }
 
     const response = await fetch(`${BASE_URL}/patients`, {
@@ -168,7 +171,7 @@ pre{
 <input id="gender" placeholder="Gender">
 <input id="phoneNumber" placeholder="Phone">
 <input id="address" placeholder="Address">
-<input id="email" placeholder="Email or Gmail">
+<input id="email" placeholder="Email">
 <button onclick="createPatient()">Create</button>
 
 <div id="result"></div>
@@ -215,7 +218,7 @@ async function createPatient(){
       address:document.getElementById("address").value,
       email:document.getElementById("email").value
     };
-    const res=await fetch("/api/patients",{ // ✅ match backend route /patients
+    const res=await fetch("/api/patients",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(payload)
