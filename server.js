@@ -1,6 +1,6 @@
 // server.js
 const express = require("express");
-const fetch = require("node-fetch"); // Make sure you installed node-fetch: npm install node-fetch
+const fetch = require("node-fetch"); // Make sure to install with `npm install node-fetch`
 
 const app = express();
 app.use(express.json());
@@ -18,15 +18,15 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
    HELPER FUNCTION
 ========================= */
 
-// Safe JSON parser to prevent 'Unexpected token' errors
+// Safe parser to handle both JSON and HTML responses
 async function safeParse(response) {
   const text = await response.text();
   try {
-    return JSON.parse(text);
+    return JSON.parse(text); // Try JSON first
   } catch (err) {
     return {
-      error: "Invalid JSON from backend",
-      rawResponse: text
+      message: "Non-JSON response",
+      rawResponse: text // keep HTML for new patient registration
     };
   }
 }
@@ -72,32 +72,19 @@ app.get("/api/services/:id", async (req, res) => {
   }
 });
 
-// 👤 Create patient (fixed)
+// 👤 Create patient
 app.post("/api/patients", async (req, res) => {
   try {
-    const payload = { ...req.body };
-
-    // Normalize key names for backend
-    if (payload.LastName) payload.lastName = payload.LastName;
-    if (payload.gmail) payload.email = payload.gmail;
-
-    // Remove extra keys
-    delete payload.LastName;
-    delete payload.gmail;
-
-    // Ensure age is a number
-    if (payload.age) payload.age = Number(payload.age);
+    const payload = req.body;
 
     // Validate required fields
     const required = ["firstName", "lastName", "age", "gender", "phoneNumber", "address", "email"];
-    const missing = required.filter(k => !payload[k]);
-    if (missing.length > 0) {
-      return res.status(400).json({
-        error: "Missing required fields: " + missing.join(", ")
-      });
+    for (let field of required) {
+      if (!payload[field]) {
+        return res.status(400).json({ error: `Missing field: ${field}` });
+      }
     }
 
-    // Send normalized payload to backend
     const response = await fetch(`${BASE_URL}/patients`, {
       method: "POST",
       headers: {
@@ -108,7 +95,15 @@ app.post("/api/patients", async (req, res) => {
       body: JSON.stringify(payload)
     });
 
-    const data = await safeParse(response);
+    const text = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(text); // JSON for existing patient
+    } catch {
+      data = { message: "Patient successfully registered", rawHTML: text }; // HTML for new patient
+    }
+
     res.status(response.status).json(data);
 
   } catch (err) {
