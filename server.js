@@ -2,7 +2,12 @@ const express = require("express");
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+
 const BASE_URL = "https://hospital-locator-api-jik9pb.5sc6y6-3.usa-e2.cloudhub.io";
+
+// 🔐 ADD YOUR REAL VALUES HERE
+const CLIENT_ID = "YOUR_CLIENT_ID";
+const CLIENT_SECRET = "YOUR_CLIENT_SECRET";
 
 app.get("/", (req, res) => {
 
@@ -44,7 +49,7 @@ border-radius:10px;
 
 <h1>🏥 Hospital Locator</h1>
 
-<h2>Search By Pincode</h2>
+<h2>Search Hospital By Pincode</h2>
 <input type="number" id="pincode" placeholder="Enter Pincode">
 <button onclick="searchPincode()">Search</button>
 
@@ -53,37 +58,58 @@ border-radius:10px;
 <button onclick="getServices()">Get Services</button>
 
 <h2>Create Patient</h2>
-<input type="text" id="patientName" placeholder="Patient Name">
-<input type="number" id="patientAge" placeholder="Age">
-<button onclick="createPatient()">Create</button>
+<input type="text" id="firstName" placeholder="First Name">
+<input type="text" id="lastName" placeholder="Last Name">
+<input type="number" id="age" placeholder="Age">
+<input type="text" id="gender" placeholder="Gender">
+<input type="text" id="phoneNumber" placeholder="Phone Number">
+<input type="text" id="address" placeholder="Address">
+<input type="text" id="gmail" placeholder="Gmail">
+<button onclick="createPatient()">Create Patient</button>
 
 <div id="results"></div>
 
 <script>
+
+const headers = {
+"Content-Type": "application/json",
+"client_id": "${CLIENT_ID}",
+"client_secret": "${CLIENT_SECRET}"
+};
 
 async function searchPincode(){
 const pincode=document.getElementById("pincode").value;
 if(!pincode){ alert("Enter pincode"); return; }
 
 try{
-const response=await fetch("${BASE_URL}/pincode?pincode="+pincode);
+const response=await fetch("${BASE_URL}/pincode?pincode="+pincode,{ headers });
+
+if(!response.ok){
+throw new Error("HTTP Error " + response.status);
+}
+
 const data=await response.json();
 
 const container=document.getElementById("results");
 container.innerHTML="";
 
+if(data.length===0){
+container.innerHTML="<p>No hospitals found</p>";
+return;
+}
+
 data.forEach(h=>{
 container.innerHTML+=\`
 <div class="card">
-<h3>\${h.name}</h3>
-<p>\${h.address}</p>
-<p>\${h.phone}</p>
+<h3>\${h.NAME || h.name}</h3>
+<p>\${h.ADDRESS || h.address}</p>
+<p>\${h.PHONENUMBER || h.phone}</p>
 </div>
 \`;
 });
 
 }catch(err){
-alert("API Error");
+alert("API Error: " + err.message);
 }
 }
 
@@ -92,7 +118,12 @@ const id=document.getElementById("hospitalId").value;
 if(!id){ alert("Enter hospital ID"); return; }
 
 try{
-const response=await fetch("${BASE_URL}/hospitals/"+id+"/services");
+const response=await fetch("${BASE_URL}/hospitals/"+id+"/services",{ headers });
+
+if(!response.ok){
+throw new Error("HTTP Error " + response.status);
+}
+
 const data=await response.json();
 
 const container=document.getElementById("results");
@@ -100,39 +131,43 @@ container.innerHTML="<h3>Services:</h3>";
 
 data.forEach(s=>{
 container.innerHTML+=\`
-<div class="card">\${s}</div>
+<div class="card">\${s.SERVICE_NAME || s}</div>
 \`;
 });
 
 }catch(err){
-alert("API Error");
+alert("API Error: " + err.message);
 }
 }
 
 async function createPatient(){
-const name=document.getElementById("patientName").value;
-const age=document.getElementById("patientAge").value;
 
-if(!name || !age){
-alert("Enter name & age");
-return;
-}
+const payload={
+firstName:document.getElementById("firstName").value,
+LastName:document.getElementById("lastName").value,
+age:document.getElementById("age").value,
+gender:document.getElementById("gender").value,
+phoneNumber:document.getElementById("phoneNumber").value,
+address:document.getElementById("address").value,
+gmail:document.getElementById("gmail").value
+};
 
 try{
 const response=await fetch("${BASE_URL}/patients",{
 method:"POST",
-headers:{ "Content-Type":"application/json" },
-body: JSON.stringify({
-name:name,
-age:age
-})
+headers,
+body: JSON.stringify(payload)
 });
 
+if(!response.ok){
+throw new Error("HTTP Error " + response.status);
+}
+
 const data=await response.json();
-alert("Patient Created: "+JSON.stringify(data));
+alert("Patient Created Successfully");
 
 }catch(err){
-alert("API Error");
+alert("API Error: " + err.message);
 }
 }
 
