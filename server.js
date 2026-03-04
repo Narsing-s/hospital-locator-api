@@ -5,9 +5,7 @@ const PORT = process.env.PORT || 3000;
 
 const BASE_URL = "https://hospital-locator-api-jik9pb.5sc6y6-3.usa-e2.cloudhub.io";
 
-// 🔐 ADD YOUR REAL VALUES HERE
-const CLIENT_ID = "YOUR_CLIENT_ID";
-const CLIENT_SECRET = "YOUR_CLIENT_SECRET";
+// 🔐 ADD YOUR REAL VALUES HER
 
 app.get("/", (req, res) => {
 
