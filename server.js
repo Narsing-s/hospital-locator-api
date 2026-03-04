@@ -1,5 +1,6 @@
 // server.js
 const express = require("express");
+const fetch = require("node-fetch"); // Make sure you installed node-fetch: npm install node-fetch
 
 const app = express();
 app.use(express.json());
@@ -71,28 +72,32 @@ app.get("/api/services/:id", async (req, res) => {
   }
 });
 
-// 👤 Create patient (supports both LastName/gmail and lastName/email)
+// 👤 Create patient (fixed)
 app.post("/api/patients", async (req, res) => {
   try {
     const payload = { ...req.body };
 
-    // Auto-correct input fields
-    if (payload.LastName) {
-      payload.lastName = payload.LastName;
-      delete payload.LastName;
-    }
-    if (payload.gmail) {
-      payload.email = payload.gmail;
-      delete payload.gmail;
-    }
+    // Normalize key names for backend
+    if (payload.LastName) payload.lastName = payload.LastName;
+    if (payload.gmail) payload.email = payload.gmail;
+
+    // Remove extra keys
+    delete payload.LastName;
+    delete payload.gmail;
+
+    // Ensure age is a number
+    if (payload.age) payload.age = Number(payload.age);
 
     // Validate required fields
-    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
+    const required = ["firstName", "lastName", "age", "gender", "phoneNumber", "address", "email"];
+    const missing = required.filter(k => !payload[k]);
+    if (missing.length > 0) {
       return res.status(400).json({
-        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email"
+        error: "Missing required fields: " + missing.join(", ")
       });
     }
 
+    // Send normalized payload to backend
     const response = await fetch(`${BASE_URL}/patients`, {
       method: "POST",
       headers: {
