@@ -71,12 +71,22 @@ app.get("/api/services/:id", async (req, res) => {
   }
 });
 
-// 👤 Create patient
-app.post("/api/patient", async (req, res) => {
+// 👤 Create patient (fixed route to /api/patients)
+app.post("/api/patients", async (req, res) => {
   try {
-    const payload = req.body;
+    const payload = { ...req.body };
 
-    // Optional: Validate required fields before sending to API
+    // ✅ Auto-correct field names
+    if (payload.LastName) {
+      payload.lastName = payload.LastName;
+      delete payload.LastName;
+    }
+    if (payload.gmail) {
+      payload.email = payload.gmail;
+      delete payload.gmail;
+    }
+
+    // Validate required fields
     if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
       return res.status(400).json({
         error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email"
@@ -208,7 +218,7 @@ async function createPatient(){
       address:document.getElementById("address").value,
       email:document.getElementById("email").value
     };
-    const res=await fetch("/api/patient",{
+    const res=await fetch("/api/patients",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(payload)
