@@ -5,28 +5,20 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-
-// ✅ BASE_URL must include /api
 const BASE_URL = "https://hospital-locator-api-jik9pb.5sc6y6-3.usa-e2.cloudhub.io/api";
 
-// 🔐 Secure environment variables
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 /* =========================
    HELPER FUNCTION
 ========================= */
-
-// Safe JSON parser to prevent 'Unexpected token' errors
 async function safeParse(response) {
   const text = await response.text();
   try {
     return JSON.parse(text);
   } catch (err) {
-    return {
-      error: "Invalid JSON from backend",
-      rawResponse: text
-    };
+    return { error: "Invalid JSON from backend", rawResponse: text };
   }
 }
 
@@ -38,48 +30,9 @@ async function safeParse(response) {
 app.get("/api/pincode", async (req, res) => {
   try {
     const { pincode } = req.query;
-    if (!pincode) {
-      return res.status(400).json({ error: "Pincode is required" });
-    }
+    if (!pincode) return res.status(400).json({ error: "Pincode is required" });
 
     const response = await fetch(`${BASE_URL}/pincode?pincode=${pincode}`, {
-      headers: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET }
-    });
-
-    const data = await safeParse(response);
-    res.status(response.status).json(data);
-
-  } catch (err) {
-    res.status(500).json({ error: "Server Error: " + err.message });
-  }
-});
-
-// 🔎 Get hospitals by city
-app.get("/api/city", async (req, res) => {
-  try {
-    const { city } = req.query;
-    if (!city) {
-      return res.status(400).json({ error: "City is required" });
-    }
-
-    const response = await fetch(`${BASE_URL}/city?city=${city}`, {
-      headers: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET }
-    });
-
-    const data = await safeParse(response);
-    res.status(response.status).json(data);
-
-  } catch (err) {
-    res.status(500).json({ error: "Server Error: " + err.message });
-  }
-});
-
-// 🏥 Get hospital services
-app.get("/api/services/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const response = await fetch(`${BASE_URL}/hospitals/${id}/services`, {
       headers: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET }
     });
 
@@ -94,6 +47,13 @@ app.get("/api/services/:id", async (req, res) => {
 // 👤 Create patient
 app.post("/api/patient", async (req, res) => {
   try {
+    const payload = req.body;
+
+    // Ensure correct field names
+    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
+      return res.status(400).json({ error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email" });
+    }
+
     const response = await fetch(`${BASE_URL}/patients`, {
       method: "POST",
       headers: {
@@ -101,7 +61,7 @@ app.post("/api/patient", async (req, res) => {
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify(payload)
     });
 
     const data = await safeParse(response);
@@ -115,7 +75,6 @@ app.post("/api/patient", async (req, res) => {
 /* =========================
    FRONTEND UI
 ========================= */
-
 app.get("/", (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -123,34 +82,11 @@ app.get("/", (req, res) => {
 <head>
 <title>Hospital Locator</title>
 <style>
-body{
-  font-family:Segoe UI;
-  background:linear-gradient(135deg,#1e3c72,#2a5298);
-  color:white;
-  text-align:center;
-  padding:20px;
-}
-input,button{
-  padding:10px;
-  margin:5px;
-  border-radius:8px;
-  border:none;
-}
-button{
-  background:#00c6ff;
-  color:white;
-  cursor:pointer;
-}
-button:hover{
-  background:#0072ff;
-}
-pre{
-  background:black;
-  color:#00ff90;
-  padding:15px;
-  border-radius:10px;
-  text-align:left;
-}
+body{font-family:Segoe UI;background:linear-gradient(135deg,#1e3c72,#2a5298);color:white;text-align:center;padding:20px;}
+input,button{padding:10px;margin:5px;border-radius:8px;border:none;}
+button{background:#00c6ff;color:white;cursor:pointer;}
+button:hover{background:#0072ff;}
+pre{background:black;color:#00ff90;padding:15px;border-radius:10px;text-align:left;}
 </style>
 </head>
 <body>
@@ -160,14 +96,6 @@ pre{
 <h3>Search By Pincode</h3>
 <input id="pincode" placeholder="Enter Pincode">
 <button onclick="searchPincode()">Search</button>
-
-<h3>Search By City</h3>
-<input id="city" placeholder="Enter City">
-<button onclick="searchCity()">Search</button>
-
-<h3>Hospital Services</h3>
-<input id="hospitalId" placeholder="Hospital ID">
-<button onclick="services()">Get Services</button>
 
 <h3>Create Patient</h3>
 <input id="firstName" placeholder="First Name">
@@ -184,9 +112,7 @@ pre{
 <script>
 async function handleResponse(res){
   const data = await res.json().catch(() => ({error:"Invalid JSON"}));
-  if(!res.ok){
-    throw new Error(JSON.stringify(data));
-  }
+  if(!res.ok) throw new Error(JSON.stringify(data));
   return data;
 }
 
@@ -194,28 +120,6 @@ async function searchPincode(){
   try{
     const pincode=document.getElementById("pincode").value;
     const res=await fetch("/api/pincode?pincode="+pincode);
-    const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
-  }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
-  }
-}
-
-async function searchCity(){
-  try{
-    const city=document.getElementById("city").value;
-    const res=await fetch("/api/city?city="+city);
-    const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
-  }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
-  }
-}
-
-async function services(){
-  try{
-    const id=document.getElementById("hospitalId").value;
-    const res=await fetch("/api/services/"+id);
     const data=await handleResponse(res);
     document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
@@ -252,6 +156,4 @@ async function createPatient(){
   `);
 });
 
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
+app.listen(PORT, () => console.log("Server running on port " + PORT));
