@@ -54,26 +54,6 @@ app.get("/api/pincode", async (req, res) => {
   }
 });
 
-// 🔎 Get hospitals by city
-app.get("/api/city", async (req, res) => {
-  try {
-    const { city } = req.query;
-    if (!city) {
-      return res.status(400).json({ error: "City is required" });
-    }
-
-    const response = await fetch(`${BASE_URL}/city?city=${city}`, {
-      headers: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET }
-    });
-
-    const data = await safeParse(response);
-    res.status(response.status).json(data);
-
-  } catch (err) {
-    res.status(500).json({ error: "Server Error: " + err.message });
-  }
-});
-
 // 🏥 Get hospital services
 app.get("/api/services/:id", async (req, res) => {
   try {
@@ -94,6 +74,15 @@ app.get("/api/services/:id", async (req, res) => {
 // 👤 Create patient
 app.post("/api/patient", async (req, res) => {
   try {
+    const payload = req.body;
+
+    // Optional: Validate required fields before sending to API
+    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
+      return res.status(400).json({
+        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email"
+      });
+    }
+
     const response = await fetch(`${BASE_URL}/patients`, {
       method: "POST",
       headers: {
@@ -101,7 +90,7 @@ app.post("/api/patient", async (req, res) => {
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify(payload)
     });
 
     const data = await safeParse(response);
@@ -161,10 +150,6 @@ pre{
 <input id="pincode" placeholder="Enter Pincode">
 <button onclick="searchPincode()">Search</button>
 
-<h3>Search By City</h3>
-<input id="city" placeholder="Enter City">
-<button onclick="searchCity()">Search</button>
-
 <h3>Hospital Services</h3>
 <input id="hospitalId" placeholder="Hospital ID">
 <button onclick="services()">Get Services</button>
@@ -194,17 +179,6 @@ async function searchPincode(){
   try{
     const pincode=document.getElementById("pincode").value;
     const res=await fetch("/api/pincode?pincode="+pincode);
-    const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
-  }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
-  }
-}
-
-async function searchCity(){
-  try{
-    const city=document.getElementById("city").value;
-    const res=await fetch("/api/city?city="+city);
     const data=await handleResponse(res);
     document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
