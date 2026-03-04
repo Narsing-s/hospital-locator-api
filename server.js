@@ -83,14 +83,14 @@ app.post("/api/patient", async (req, res) => {
       delete payload.LastName;
     }
     if (payload.gmail) {
-      payload.email = payload.gmail;
+      payload.gmail = payload.gmail;
       delete payload.gmail;
     }
 
     // Optional: Validate required fields before sending to API
-    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
+    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.gmail) {
       return res.status(400).json({
-        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email"
+        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, gmail"
       });
     }
 
