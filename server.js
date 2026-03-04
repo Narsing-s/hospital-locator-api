@@ -74,7 +74,18 @@ app.get("/api/services/:id", async (req, res) => {
 // 👤 Create patient
 app.post("/api/patient", async (req, res) => {
   try {
-    const payload = req.body;
+    // Clone the payload to avoid mutating req.body
+    const payload = { ...req.body };
+
+    // ✅ Auto-correct field names
+    if (payload.LastName) {
+      payload.lastName = payload.LastName;
+      delete payload.LastName;
+    }
+    if (payload.gmail) {
+      payload.email = payload.gmail;
+      delete payload.gmail;
+    }
 
     // Optional: Validate required fields before sending to API
     if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
