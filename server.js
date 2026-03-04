@@ -71,12 +71,12 @@ app.get("/api/services/:id", async (req, res) => {
   }
 });
 
-// 👤 Create patient (fixed route to /api/patients)
+// 👤 Create patient (supports both LastName/gmail and lastName/email)
 app.post("/api/patients", async (req, res) => {
   try {
     const payload = { ...req.body };
 
-    // ✅ Auto-correct field names
+    // Auto-correct input fields
     if (payload.LastName) {
       payload.lastName = payload.LastName;
       delete payload.LastName;
