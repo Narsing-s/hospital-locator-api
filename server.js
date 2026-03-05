@@ -78,18 +78,18 @@ app.post("/api/patients", async (req, res) => {
 
     // Auto-correct input fields
     if (payload.LastName) {
-      payload.lastName = payload.LastName;
+      payload.LastName = payload.LastName;
       delete payload.LastName;
     }
     if (payload.gmail) {
-      payload.email = payload.gmail;
+      payload.gmail = payload.gmail;
       delete payload.gmail;
     }
 
     // Validate required fields
-    if (!payload.firstName || !payload.lastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.email) {
+    if (!payload.firstName || !payload.LastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.gmail) {
       return res.status(400).json({
-        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, email"
+        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, gmail"
       });
     }
 
@@ -166,12 +166,12 @@ pre{
 
 <h3>Create Patient</h3>
 <input id="firstName" placeholder="First Name">
-<input id="lastName" placeholder="Last Name">
+<input id="LastName" placeholder="Last Name">
 <input id="age" placeholder="Age">
 <input id="gender" placeholder="Gender">
 <input id="phoneNumber" placeholder="Phone">
 <input id="address" placeholder="Address">
-<input id="email" placeholder="Email">
+<input id="gmail" placeholder="Gmail">
 <button onclick="createPatient()">Create</button>
 
 <div id="result"></div>
@@ -216,7 +216,7 @@ async function createPatient(){
       gender:document.getElementById("gender").value,
       phoneNumber:document.getElementById("phoneNumber").value,
       address:document.getElementById("address").value,
-      email:document.getElementById("email").value
+      gmail:document.getElementById("gmail").value
     };
     const res=await fetch("/api/patients",{
       method:"POST",
