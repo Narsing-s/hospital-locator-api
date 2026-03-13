@@ -42,7 +42,7 @@ app.get("/api/pincode", async (req, res) => {
       return res.status(400).json({ error: "Pincode is required" });
     }
 
-    const response = await fetch(`${BASE_URL}/pincode?pincode=${pincode}`, {
+    const response = await fetch(`${BASE_URL}/pincode?pincode=${encodeURIComponent(pincode)}`, {
       headers: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET }
     });
 
@@ -58,8 +58,11 @@ app.get("/api/pincode", async (req, res) => {
 app.get("/api/services/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: "Hospital ID is required" });
+    }
 
-    const response = await fetch(`${BASE_URL}/hospitals/${id}/services`, {
+    const response = await fetch(`${BASE_URL}/hospitals/${encodeURIComponent(id)}/services`, {
       headers: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET }
     });
 
@@ -76,20 +79,26 @@ app.post("/api/patients", async (req, res) => {
   try {
     const payload = { ...req.body };
 
-    // Auto-correct input fields
-    if (payload.LastName) {
-      payload.LastName = payload.LastName;
+    // ✅ Normalize fields: map variants to canonical keys
+    if (payload.LastName && !payload.lastName) {
+      payload.lastName = payload.LastName;
       delete payload.LastName;
     }
-    if (payload.gmail) {
-      payload.gmail = payload.gmail;
-      delete payload.gmail;
+    // Accept 'email' as alias for 'gmail'
+    if (payload.email && !payload.gmail) {
+      payload.gmail = payload.email;
+      delete payload.email;
     }
 
-    // Validate required fields
-    if (!payload.firstName || !payload.LastName || !payload.age || !payload.gender || !payload.phoneNumber || !payload.address || !payload.gmail) {
+    // ✅ Validate required canonical fields
+    const required = ["firstName", "lastName", "age", "gender", "phoneNumber", "address", "gmail"];
+    const missing = required.filter((k) => !payload[k]);
+
+    if (missing.length) {
       return res.status(400).json({
-        error: "Missing required fields. Required: firstName, lastName, age, gender, phoneNumber, address, gmail"
+        error: "Missing required fields",
+        required,
+        missing
       });
     }
 
@@ -123,7 +132,7 @@ app.get("/", (req, res) => {
 <title>Hospital Locator</title>
 <style>
 body{
-  font-family:Segoe UI;
+  font-family:Segoe UI, Arial, sans-serif;
   background:linear-gradient(135deg,#1e3c72,#2a5298);
   color:white;
   text-align:center;
@@ -149,37 +158,58 @@ pre{
   padding:15px;
   border-radius:10px;
   text-align:left;
+  overflow:auto;
+  max-height:50vh;
+}
+.container{
+  max-width:900px;
+  margin:0 auto;
+}
+.row{
+  margin: 24px 0;
+}
+input{
+  min-width: 260px;
 }
 </style>
 </head>
 <body>
 
-<h1>🏥 Hospital Locator Web UI</h1>
+<div class="container">
+  <h1>🏥 Hospital Locator Web UI</h1>
 
-<h3>Search By Pincode</h3>
-<input id="pincode" placeholder="Enter Pincode">
-<button onclick="searchPincode()">Search</button>
+  <div class="row">
+    <h3>Search By Pincode</h3>
+    <input id="pincode" placeholder="Enter Pincode">
+    <button onclick="searchPincode()">Search</button>
+  </div>
 
-<h3>Hospital Services</h3>
-<input id="hospitalId" placeholder="Hospital ID">
-<button onclick="services()">Get Services</button>
+  <div class="row">
+    <h3>Hospital Services</h3>
+    <input id="hospitalId" placeholder="Hospital ID">
+    <button onclick="services()">Get Services</button>
+  </div>
 
-<h3>Create Patient</h3>
-<input id="firstName" placeholder="First Name">
-<input id="LastName" placeholder="Last Name">
-<input id="age" placeholder="Age">
-<input id="gender" placeholder="Gender">
-<input id="phoneNumber" placeholder="Phone">
-<input id="address" placeholder="Address">
-<input id="gmail" placeholder="Gmail">
-<button onclick="createPatient()">Create</button>
+  <div class="row">
+    <h3>Create Patient</h3>
+    <input id="firstName" placeholder="First Name">
+    <input id="lastName"  placeholder="Last Name"><!-- ✅ aligned id -->
+    <input id="age"       placeholder="Age">
+    <input id="gender"    placeholder="Gender">
+    <input id="phoneNumber" placeholder="Phone">
+    <input id="address"   placeholder="Address">
+    <input id="gmail"     placeholder="Gmail (or use 'email' via API)">
+    <button onclick="createPatient()">Create</button>
+  </div>
 
-<div id="result"></div>
+  <div id="result"></div>
+</div>
 
 <script>
 async function handleResponse(res){
   const data = await res.json().catch(() => ({error:"Invalid JSON"}));
   if(!res.ok){
+    // stringifying preserves upstream error structure
     throw new Error(JSON.stringify(data));
   }
   return data;
@@ -187,46 +217,58 @@ async function handleResponse(res){
 
 async function searchPincode(){
   try{
-    const pincode=document.getElementById("pincode").value;
-    const res=await fetch("/api/pincode?pincode="+pincode);
-    const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
+    const pincode = document.getElementById("pincode").value;
+    const res = await fetch("/api/pincode?pincode=" + encodeURIComponent(pincode));
+    const data = await handleResponse(res);
+    document.getElementById("result").innerHTML = "<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
+    document.getElementById("result").innerHTML = "<pre style='color:red'>"+err.message+"</pre>";
   }
 }
 
 async function services(){
   try{
-    const id=document.getElementById("hospitalId").value;
-    const res=await fetch("/api/services/"+id);
-    const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
+    const id = document.getElementById("hospitalId").value;
+    const res = await fetch("/api/services/" + encodeURIComponent(id));
+    const data = await handleResponse(res);
+    document.getElementById("result").innerHTML = "<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
+    document.getElementById("result").innerHTML = "<pre style='color:red'>"+err.message+"</pre>";
   }
 }
 
 async function createPatient(){
   try{
-    const payload={
-      firstName:document.getElementById("firstName").value,
-      lastName:document.getElementById("lastName").value,
-      age:document.getElementById("age").value,
-      gender:document.getElementById("gender").value,
-      phoneNumber:document.getElementById("phoneNumber").value,
-      address:document.getElementById("address").value,
-      gmail:document.getElementById("gmail").value
+    const firstNameEl   = document.getElementById("firstName");
+    const lastNameEl    = document.getElementById("lastName");
+    const ageEl         = document.getElementById("age");
+    const genderEl      = document.getElementById("gender");
+    const phoneNumberEl = document.getElementById("phoneNumber");
+    const addressEl     = document.getElementById("address");
+    const gmailEl       = document.getElementById("gmail");
+
+    // Optional: guard against missing elements
+    if (!firstNameEl || !lastNameEl) throw new Error("Form not loaded");
+
+    const payload = {
+      firstName:   firstNameEl.value,
+      lastName:    lastNameEl.value,    // ✅ matches corrected id
+      age:         ageEl.value,
+      gender:      genderEl.value,
+      phoneNumber: phoneNumberEl.value,
+      address:     addressEl.value,
+      gmail:       gmailEl.value
     };
-    const res=await fetch("/api/patients",{
+
+    const res = await fetch("/api/patients",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(payload)
     });
-    const data=await handleResponse(res);
-    document.getElementById("result").innerHTML="<pre>"+JSON.stringify(data,null,2)+"</pre>";
+    const data = await handleResponse(res);
+    document.getElementById("result").innerHTML = "<pre>"+JSON.stringify(data,null,2)+"</pre>";
   }catch(err){
-    document.getElementById("result").innerHTML="<pre style='color:red'>"+err.message+"</pre>";
+    document.getElementById("result").innerHTML = "<pre style='color:red'>"+err.message+"</pre>";
   }
 }
 </script>
