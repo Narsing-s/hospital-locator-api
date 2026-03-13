@@ -1,9 +1,8 @@
 // server.js
 const express = require("express");
 
-// If you're on Node 16, uncomment the next two lines and run: npm i node-fetch@2
-// const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-// global.fetch = global.fetch || fetch;
+// On Node 18+ you have global fetch. If you MUST support Node 16, either set NODE_VERSION=18 on Render
+// or switch to ESM and import node-fetch v3. Easiest on Render: use Node 18+ and global fetch.
 
 const app = express();
 app.use(express.json());
@@ -17,7 +16,7 @@ const BASE_URL = "https://hospital-locator-api-jik9pb.5sc6y6-3.usa-e2.cloudhub.i
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
-/* --------- Diagnostics: log every request and tag responses --------- */
+/* --------- Diagnostics: tag responses + log every request --------- */
 app.use((req, res, next) => {
   res.setHeader("X-App", "Node-UI");
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
@@ -238,33 +237,3 @@ const UI_HTML = `<!DOCTYPE html>
         firstName:   byId("firstName").value,
         lastName:    byId("lastName").value,   // UI uses lowerCamelCase; server maps to LastName for Mule
         age:         byId("age").value,
-        gender:      byId("gender").value,
-        phoneNumber: byId("phoneNumber").value,
-        address:     byId("address").value,
-        gmail:       byId("gmail").value
-      };
-      const res = await fetch("/api/patients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await handleResponse(res);
-      show(data);
-    }catch(err){ show({ error: err.message }); }
-  }
-</script>
-</body>
-</html>`;
-
-app.get("/", (_req, res) => res.send(UI_HTML));
-app.get("/ui", (_req, res) => res.send(UI_HTML)); // alias, useful behind some proxies
-
-/* ----------------- 404 fallback (must be last) ----------------- */
-app.use((req, res) => {
-  res.status(404).json({ error: "Not Found", path: req.path });
-});
-
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
-``
