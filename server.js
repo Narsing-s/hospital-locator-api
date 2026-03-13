@@ -49,6 +49,7 @@ app.get("/health", (_req, res) => {
 ========================= */
 
 // 🔎 Get hospitals by pincode
+// Example: GET /api/pincode?pincode=531034
 app.get("/api/pincode", async (req, res) => {
   try {
     const { pincode } = req.query;
@@ -68,6 +69,7 @@ app.get("/api/pincode", async (req, res) => {
 });
 
 // 🏥 Get hospital services
+// Example: GET /api/services/1
 app.get("/api/services/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -87,6 +89,18 @@ app.get("/api/services/:id", async (req, res) => {
 });
 
 // 👤 Create patient — maps to Mule's required keys (case-sensitive)
+// Example body that Mule accepts directly:
+/*
+{
+  "firstName": "sekhar",
+  "LastName": "saragada",
+  "age": 30,
+  "gender": "male",
+  "phoneNumber": "958267828827",
+  "address": "cvd",
+  "gmail": "sekharsaragada123@gmail.com"
+}
+*/
 app.post("/api/patients", async (req, res) => {
   try {
     const raw = { ...req.body };
@@ -99,7 +113,7 @@ app.post("/api/patients", async (req, res) => {
       gender:      raw.gender ?? "",
       phoneNumber: raw.phoneNumber ?? raw.phone ?? "",
       address:     raw.address ?? "",
-      gmail:       raw.gmail ?? raw.email ?? "" // allow 'email' as alias from clients
+      gmail:       raw.gmail ?? raw.email ?? "" // accept 'email' from clients, map later
     };
 
     // Trim strings
@@ -127,20 +141,16 @@ app.post("/api/patients", async (req, res) => {
       });
     }
 
-    // 3) Map to Mule's expected shape (CASE SENSITIVE)
-    // Per RAML example: firstName, LastName (capital L), age, gender, phoneNumber, address, gmail
+    // 3) Map to Mule's expected shape (CASE SENSITIVE per RAML)
     const backendPayload = {
       firstName: payload.firstName,
-      LastName:  payload.lastName,    // <-- Capital L for Mule
+      LastName:  payload.lastName,    // <-- Capital 'L' required by Mule
       age:       ageNum,
       gender:    payload.gender,
       phoneNumber: payload.phoneNumber,
       address:   payload.address,
-      gmail:     payload.gmail        // Mule expects 'gmail' (not 'email') per RAML example
+      gmail:     payload.gmail        // Mule expects 'gmail' (not 'email')
     };
-
-    // Optional: log temporarily to verify what goes to Mule (remove in production)
-    // console.log("backendPayload -> Mule:", backendPayload);
 
     const response = await fetch(`${BASE_URL}/patients`, {
       method: "POST",
@@ -159,7 +169,7 @@ app.post("/api/patients", async (req, res) => {
   }
 });
 
-// 404 fallback for non-existent routes
+// 404 fallback for other routes (so "/" returns Not Found in API-only mode)
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found", path: req.path });
 });
