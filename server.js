@@ -17,8 +17,9 @@ const BASE_URL = "https://hospital-locator-api-jik9pb.5sc6y6-3.usa-e2.cloudhub.i
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
-/* --------- Diagnostics: log every request --------- */
-app.use((req, _res, next) => {
+/* --------- Diagnostics: log every request and tag responses --------- */
+app.use((req, res, next) => {
+  res.setHeader("X-App", "Node-UI");
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
@@ -78,6 +79,8 @@ app.get("/api/services/:id", async (req, res) => {
 });
 
 // POST /api/patients
+// Accepts flexible input (lastName/LastName, gmail/email), validates,
+// then maps to Mule's required keys (CASE SENSITIVE: LastName, gmail).
 app.post("/api/patients", async (req, res) => {
   try {
     const raw = { ...req.body };
@@ -93,16 +96,19 @@ app.post("/api/patients", async (req, res) => {
       gmail:       raw.gmail ?? raw.email ?? ""
     };
 
+    // Trim strings
     for (const k of Object.keys(payload)) {
       if (typeof payload[k] === "string") payload[k] = payload[k].trim();
     }
 
+    // Validate required canonical fields (treat empty as missing)
     const required = ["firstName", "lastName", "age", "gender", "phoneNumber", "address", "gmail"];
     const missing = required.filter((k) => payload[k] === undefined || payload[k] === null || payload[k] === "");
     if (missing.length) {
       return res.status(400).json({ error: "Missing required fields", required, missing });
     }
 
+    // Ensure age is a positive number
     const ageNum = Number(payload.age);
     if (!Number.isFinite(ageNum) || ageNum <= 0) {
       return res.status(400).json({ error: "Invalid 'age': must be a positive number", received: payload.age });
@@ -195,15 +201,19 @@ const UI_HTML = `<!DOCTYPE html>
   </div>
 
 <script>
-  function byId(id){ const el = document.getElementById(id); if(!el){ throw new Error('Element #' + id + ' not found in DOM'); } return el; }
-  function show(obj){ byId("result").innerHTML = "<pre>" + JSON.stringify(obj, null, 2) + "</pre>"; }
-
+  function byId(id){
+    const el = document.getElementById(id);
+    if(!el){ throw new Error('Element #' + id + ' not found in DOM'); }
+    return el;
+  }
+  function show(obj){
+    byId("result").innerHTML = "<pre>" + JSON.stringify(obj, null, 2) + "</pre>";
+  }
   async function handleResponse(res){
     const data = await res.json().catch(() => ({ error:"Invalid JSON" }));
     if(!res.ok){ throw new Error(JSON.stringify(data)); }
     return data;
   }
-
   async function searchPincode(){
     try{
       const pincode = byId("pincode").value.trim();
@@ -213,7 +223,6 @@ const UI_HTML = `<!DOCTYPE html>
       show(data);
     }catch(err){ show({ error: err.message }); }
   }
-
   async function services(){
     try{
       const id = byId("hospitalId").value.trim();
@@ -223,12 +232,11 @@ const UI_HTML = `<!DOCTYPE html>
       show(data);
     }catch(err){ show({ error: err.message }); }
   }
-
   async function createPatient(){
     try{
       const payload = {
         firstName:   byId("firstName").value,
-        lastName:    byId("lastName").value,
+        lastName:    byId("lastName").value,   // UI uses lowerCamelCase; server maps to LastName for Mule
         age:         byId("age").value,
         gender:      byId("gender").value,
         phoneNumber: byId("phoneNumber").value,
@@ -243,3 +251,20 @@ const UI_HTML = `<!DOCTYPE html>
       const data = await handleResponse(res);
       show(data);
     }catch(err){ show({ error: err.message }); }
+  }
+</script>
+</body>
+</html>`;
+
+app.get("/", (_req, res) => res.send(UI_HTML));
+app.get("/ui", (_req, res) => res.send(UI_HTML)); // alias, useful behind some proxies
+
+/* ----------------- 404 fallback (must be last) ----------------- */
+app.use((req, res) => {
+  res.status(404).json({ error: "Not Found", path: req.path });
+});
+
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});
+``
